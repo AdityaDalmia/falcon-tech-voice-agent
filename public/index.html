@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swara - Enterprise AI Voice Agent</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface: rgba(22, 28, 45, 0.6);
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.5);
+            --secondary: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #f43f5e;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3.5rem 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Glass highlight effect */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 2rem 2rem 0 0;
+        }
+
+        h1 {
+            margin: 1.5rem 0 0.5rem;
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Status Indicator */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .disconnected .status-dot {
+            background-color: var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
+
+        .connecting .status-dot {
+            background-color: #eab308;
+            box-shadow: 0 0 10px #eab308;
+        }
+
+        .connected .status-dot {
+            background-color: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .status-text {
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* The AI Orb */
+        .orb-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+        }
+
+        .orb {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 0 40px var(--primary-glow);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .orb::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            bottom: -5px;
+            left: -5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.6;
+            transition: opacity 0.5s ease;
+        }
+
+        .orb.active {
+            animation: pulse-orb 2s infinite ease-in-out;
+            box-shadow: 0 0 70px rgba(236, 72, 153, 0.6);
+        }
+
+        .orb.active::after {
+            opacity: 1;
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        /* Soundwaves */
+        .soundwaves {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1;
+        }
+
+        .orb.active~.soundwaves {
+            opacity: 1;
+            animation: ripple 2s infinite linear;
+        }
+
+        @keyframes pulse-orb {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                filter: blur(20px);
+            }
+
+            50% {
+                filter: blur(35px);
+            }
+
+            100% {
+                filter: blur(20px);
+            }
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, var(--primary), #6d28d9);
+            color: white;
+            border: none;
+            padding: 1.1rem 2rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            border-radius: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 20px -10px var(--primary-glow);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px var(--primary-glow);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn.btn-danger {
+            background: linear-gradient(135deg, var(--danger), #be123c);
+            box-shadow: 0 10px 20px -10px rgba(244, 63, 94, 0.5);
+        }
+
+        .btn.btn-danger:hover {
+            box-shadow: 0 15px 25px -10px rgba(244, 63, 94, 0.5);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="orb-container">
+            <div class="orb" id="orb"></div>
+            <div class="soundwaves"></div>
+        </div>
+
+        <h1>Swara Receptionist </h1>
+        <p>Enterprise-grade AI Assistant. Speak naturally to manage your appointments and schedule.</p>
+
+        <div class="status-badge disconnected" id="status-container">
+            <div class="status-dot"></div>
+            <span class="status-text" id="status">Disconnected</span>
+        </div>
+
+        <button class="btn" id="start-btn">Connect Audio</button>
+        <button class="btn btn-danger hidden" id="end-btn">End Session</button>
+    </div>
+
+    <!-- Load app logic as ES module -->
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
