@@ -9,6 +9,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public')); // Serve the web frontend
 
+// Simple GET route to verify webhook server status in browser
+app.get('/api/webhook', (req, res) => {
+    res.send('Vapi Webhook Endpoint is Live and Ready!');
+});
+
 // Vapi Webhook for Custom Tools
 app.post('/api/webhook', async (req, res) => {
     try {
